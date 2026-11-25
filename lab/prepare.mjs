@@ -3,8 +3,8 @@ import path from 'node:path';
 function makeEdition(source,edition){
  const x={...source},eng=edition==='engineering';
  const sub=(s,a,b)=>{if(!s.includes(a))throw Error('Missing anchor: '+a.slice(0,90));return s.replace(a,b)};
- x.gradle=sub(x.gradle,'versionCode = 17','versionCode = 23');
- x.gradle=sub(x.gradle,'versionName = "6.1.6"','versionName = "1.1-run-preview"');
+ x.gradle=sub(x.gradle,'versionCode = 17','versionCode = 24');
+ x.gradle=sub(x.gradle,'versionName = "6.1.6"','versionName = "1.1.1"');
  if(eng)x.gradle=sub(x.gradle,'applicationId = "com.uart.wc01"','applicationId = "com.uart.wc01.engineering"');
  x.manifest=sub(x.manifest,'android:label="uArt WC-01"','android:label="'+(eng?'uArt WC-01+':'uArt WC-01')+'"');
  x.html=sub(x.html,'<div class="assistant-reply" id="assistantReply"','<details class="lab-engineering"><summary>Online AI / ذكاء أونلاين (اختياري)</summary><p>Uses your own OpenAI API key; requests may incur charges. Only the question you enter is sent. / قد تُحسب تكلفة حسب حسابك، يُرسل السؤال فقط.</p><label>API key (session only)<input id="labApiKey" type="password" autocomplete="off" maxlength="256"></label><label>Model<input id="labModel" value="gpt-4.1-mini" maxlength="64"></label><button type="button" id="labOnline">Ask online / اسأل أونلاين</button><div id="labOnlineStatus" role="status"></div></details><div class="lab-chat" id="labChat" role="log" aria-live="polite"></div><div class="lab-prompts"><button type="button" data-question="F8">F8</button><button type="button" data-question="ESP32 restart">Power</button><button type="button" data-question="HOME">HOME</button><button type="button" data-question="Wi-Fi">Wi-Fi</button></div><div class="assistant-reply" id="assistantReply"');
@@ -17,7 +17,7 @@ function makeEdition(source,edition){
  x.js=sub(x.js,old,added);
  x.js=sub(x.js,"$('assistantCheck').onclick=()=>assistantAnswer();$('assistantAsk').onclick=()=>assistantAnswer($('assistantInput').value);","$('assistantCheck').onclick=()=>labAsk('');$('assistantAsk').onclick=()=>labAsk($('assistantInput').value);$('labOnline').onclick=()=>{const q=$('assistantInput').value.trim(),key=$('labApiKey').value.trim(),model=$('labModel').value.trim();if(labBusy)return;if(!q||!key||!model){notify(msg('Enter question, key and model','اكتب السؤال والمفتاح والنموذج'));return}if(!window.WC01Online){notify(msg('Online bridge unavailable','الاتصال الخارجي غير متاح'));return}labBusy=true;$('labOnline').disabled=true;labMessage(q,'user');$('assistantInput').value='';$('labOnlineStatus').textContent=msg('Requesting online answer…','جاري طلب إجابة أونلاين…');try{window.WC01Online.ask(key,model,q)}catch(e){window.__wc01OnlineAnswer(false,'Online bridge failed')}};window.__wc01OnlineAnswer=(ok,answer)=>{labBusy=false;$('labOnline').disabled=false;$('labOnlineStatus').textContent=ok?msg('Online model','نموذج أونلاين'):msg('Online unavailable; local assistant still works','أونلاين غير متاح؛ المساعد المحلي يعمل');labMessage(String(answer),'bot')};document.querySelectorAll('[data-question]').forEach(el=>el.onclick=()=>labAsk(el.dataset.question));if($('labSave')){$('labSave').onclick=labRegistrySave;$('labCapture').onclick=()=>{if(online()&&typeof liveStatus.serial==='string')$('labSerial').value=liveStatus.serial;else notify(msg('No authenticated controller','لا يوجد كنترول متصل ومؤكد'))}};");
  x.js=sub(x.js,"$('assistantIntro').textContent=msg('Built-in diagnostic rules, no internet or external AI model.','قواعد تشخيص مدمجة، بدون إنترنت أو نموذج ذكاء اصطناعي خارجي.');","$('assistantIntro').textContent=msg('Local diagnostic rules · optional online model','قواعد تشخيص محلية · نموذج أونلاين اختياري');");
- x.js=sub(x.js,"v6.1.6 · Contextual remote, weld progress, local assistant","V1.1 DEV · "+edition+" · Local + optional online");
+ x.js=sub(x.js,"v6.1.6 · Contextual remote, weld progress, local assistant","V1.1.1 · "+edition+" · Local + optional online");
  return x;
 }
 const root=process.argv[2],edition=process.argv[3];if(!['customer','engineering'].includes(edition))throw Error('edition');const map={js:'app/src/main/assets/js/app.js',html:'app/src/main/assets/index.html',css:'app/src/main/assets/css/style.css',gradle:'app/build.gradle.kts',manifest:'app/src/main/AndroidManifest.xml'};const source=Object.fromEntries(Object.entries(map).map(([k,v])=>[k,fs.readFileSync(path.join(root,v),'utf8')]));const result=makeEdition(source,edition);new Function(result.js);for(const [k,v] of Object.entries(map))fs.writeFileSync(path.join(root,v),result[k]);fs.copyFileSync(new URL('./lab-core.js',import.meta.url),path.join(root,'app/src/main/assets/js/lab-core.js'));
@@ -64,3 +64,11 @@ if(edition==='engineering'){
  fs.writeFileSync(path.join(root,map.js),combined);
  fs.appendFileSync(path.join(root,map.css),'\n'+factoryCss);
 }
+
+/* Extensions must share the original application's lexical scope. */
+let finalApp=fs.readFileSync(path.join(root,map.js),'utf8');
+const appEnd="if(get('introSeen',false))enterApp();else introTo(1);\n})();";
+if(finalApp.split(appEnd).length!==2)throw Error('Application scope anchor missing');
+finalApp=finalApp.replace(appEnd,"if(get('introSeen',false))enterApp();else introTo(1);")+'\n})();\n';
+new Function(finalApp);
+fs.writeFileSync(path.join(root,map.js),finalApp);

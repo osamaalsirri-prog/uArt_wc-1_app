@@ -33,14 +33,16 @@ function event(text){log.push({at:new Date().toLocaleString(),text:String(text)}
 function mount(){
  if($e('wcEngRoot'))return;
  const root=document.createElement('section');root.id='wcEngRoot';root.setAttribute('role','dialog');root.setAttribute('aria-label','Engineering workspace');
- root.innerHTML='<header class="we-head"><div><small>uArt / INDUSTRIAL SYSTEMS</small><h1>WC-01<span>+</span></h1><p>ENGINEERING WORKSPACE · V1.1 DEV</p></div><button id="weClose" type="button">OPERATE<br>تشغيل</button></header><div class="we-status" id="weStatus"></div><nav class="we-tabs" aria-label="Engineering sections"><button data-we="overview">Overview<br>نظرة عامة</button><button data-we="io">I/O<br>الإشارات</button><button data-we="calc">Tools<br>حسابات</button><button data-we="log">Events<br>الأحداث</button></nav><main id="weContent"></main><footer>READ-ONLY WORKSPACE · لا يرسل أوامر للماكينة</footer>';
- document.body.append(root);
- const launcher=document.createElement('button');launcher.id='wcEngLauncher';launcher.type='button';launcher.textContent='WC-01+ / ENGINEERING';document.body.append(launcher);
- launcher.onclick=()=>{try{stopJog()}catch(e){}root.hidden=false;launcher.hidden=true;render()};
+ root.innerHTML='<header class="we-head"><div><small>uArt / INDUSTRIAL SYSTEMS</small><h1>WC-01<span>+</span></h1><p>ENGINEERING WORKSPACE · V1.1.1</p></div><button id="weClose" type="button">OPERATE<br>تشغيل</button></header><div class="we-status" id="weStatus"></div><nav class="we-tabs" aria-label="Engineering sections"><button data-we="overview">Overview<br>نظرة عامة</button><button data-we="io">I/O<br>الإشارات</button><button data-we="calc">Tools<br>حسابات</button><button data-we="log">Events<br>الأحداث</button></nav><main id="weContent"></main><footer>DIAGNOSTICS · مراقبة وتشخيص</footer>';
+ root.hidden=true;document.body.append(root);
+ const launcher=document.createElement('button');launcher.id='wcEngLauncher';launcher.type='button';launcher.className='factory-nav';launcher.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V9l6 3V6l6 4V3h5v18zM7 17h2m3 0h2m3 0h1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Factory</span>';const nav=document.querySelector('.bottom-nav');if(!nav)throw Error('Navigation missing');nav.classList.add('with-factory');nav.append(launcher);
+ function openDiagnostics(){stopJog();toggleFloatingPanel(false);root.hidden=false;render(true)}
+ window.WC01OpenDiagnostics=openDiagnostics;
+ launcher.onclick=()=>{if(typeof window.WC01OpenFactory==='function')window.WC01OpenFactory();else openDiagnostics()};
  $e('weClose').onclick=()=>{root.hidden=true;launcher.hidden=false};
  root.querySelectorAll('[data-we]').forEach(b=>b.onclick=()=>{tab=b.dataset.we;render(true)});
  const back=window.__wc01Back;window.__wc01Back=function(){if(!root.hidden){root.hidden=true;launcher.hidden=false;return}if(typeof back==='function')return back()};
- launcher.hidden=true;render(true);
+ launcher.hidden=false;const syncNav=()=>{const title=tr('Factory','المصنع');launcher.querySelector('span').textContent=title;launcher.setAttribute('aria-label',title)};syncNav();new MutationObserver(syncNav).observe(document.documentElement,{attributes:true,attributeFilter:['lang','dir']});render(true);
  setInterval(()=>{if(document.hidden)return;sample();if(!root.hidden)render()},1000);
 }
 function sample(){

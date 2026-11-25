@@ -33,8 +33,8 @@ function mount(){
  overlay.classList.add('ua-overlay');sheet.classList.add('ua-sheet');
  const localAsk=send.onclick;
  send.onclick=()=>{if(labBusy)return;const q=input.value.trim();if(!q)return;
-   if(mode==='online'){if(!el('labApiKey').value.trim()||!el('labModel').value.trim()){panel.hidden=false;el('labApiKey').focus();return}el('labOnline').click()}
-   else if(typeof localAsk==='function')localAsk();
+   if(mode==='online'){if(!el('labApiKey').value.trim()||!el('labModel').value.trim()){panel.hidden=false;el('labApiKey').focus();notify(tr('Enter your API key and model first.','أدخل مفتاح API والنموذج أولًا.'));return}el('labOnline').click()}
+   else if(typeof localAsk==='function'){try{localAsk()}catch(e){labMessage(tr('Local assistant failed. Try again.','حدث خطأ في المساعد المحلي. حاول مرة أخرى.'),'bot');console.error(e)}}
  };
  const diagnose=check.onclick;check.onclick=()=>{if(!labBusy&&typeof diagnose==='function')diagnose()};
  settings.onclick=()=>{panel.hidden=!panel.hidden;settings.setAttribute('aria-expanded',String(!panel.hidden));if(!panel.hidden)panel.scrollTop=0};
