@@ -1,0 +1,2 @@
+# uArt V7 LAB
+Experimental, separate from main. Both editions retain V6.1.6 controls; engineering adds a local asset register and separate package, NOT new authorization. Deterministic offline chat, no LLM, OTA, LAN discovery, paired remote or live hardware test. Use node lab/test.mjs; extract the original zip separately for each edition and run node lab/prepare.mjs android-source/android customer|engineering. Do not deploy on live equipment.
