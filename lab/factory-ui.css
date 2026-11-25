@@ -18,3 +18,5 @@
 #wfPanel .wf-actions{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
 #wfPanel .wf-actions button{flex:1}
 #wfPanel #wfMessage{color:#a9e5d9}
+
+#wfPanel .wf-speed-section{border:1px solid #5ce6cf;background:#142a2c}#wfPanel .wf-live-speed{white-space:pre-wrap;color:#a9e5d9;font:600 12px/1.6 system-ui}#wfPanel .wf-speed-section h2{color:#5ce6cf}#wfPanel #wfSpeedFields input{font-size:19px;font-weight:650}#wfPanel .wf-speed-section .wf-actions{flex-wrap:wrap}#wfPanel .wf-speed-section .wf-actions button{min-width:120px}

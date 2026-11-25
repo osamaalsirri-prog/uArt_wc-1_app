@@ -3,8 +3,8 @@ import path from 'node:path';
 function makeEdition(source,edition){
  const x={...source},eng=edition==='engineering';
  const sub=(s,a,b)=>{if(!s.includes(a))throw Error('Missing anchor: '+a.slice(0,90));return s.replace(a,b)};
- x.gradle=sub(x.gradle,'versionCode = 17','versionCode = 28');
- x.gradle=sub(x.gradle,'versionName = "6.1.6"','versionName = "1.1.5"');
+ x.gradle=sub(x.gradle,'versionCode = 17','versionCode = 29');
+ x.gradle=sub(x.gradle,'versionName = "6.1.6"','versionName = "1.1.6"');
  if(eng)x.gradle=sub(x.gradle,'applicationId = "com.uart.wc01"','applicationId = "com.uart.wc01.engineering"');
  x.manifest=sub(x.manifest,'android:label="uArt WC-01"','android:label="'+(eng?'uArt WC-01+':'uArt WC-01')+'"');
  x.html=sub(x.html,'<div class="assistant-reply" id="assistantReply"','<details class="lab-engineering"><summary>Online AI / ذكاء أونلاين (اختياري)</summary><p>Uses your own OpenAI API key; requests may incur charges. Only the question you enter is sent. / قد تُحسب تكلفة حسب حسابك، يُرسل السؤال فقط.</p><label>API key (session only)<input id="labApiKey" type="password" autocomplete="off" maxlength="256"></label><label>Model<input id="labModel" value="gpt-4.1-mini" maxlength="64"></label><button type="button" id="labOnline">Ask online / اسأل أونلاين</button><div id="labOnlineStatus" role="status"></div></details><div class="lab-chat" id="labChat" role="log" aria-live="polite"></div><div class="lab-prompts"><button type="button" data-question="F8">F8</button><button type="button" data-question="ESP32 restart">Power</button><button type="button" data-question="HOME">HOME</button><button type="button" data-question="Wi-Fi">Wi-Fi</button></div><div class="assistant-reply" id="assistantReply"');
@@ -17,7 +17,7 @@ function makeEdition(source,edition){
  x.js=sub(x.js,old,added);
  x.js=sub(x.js,"$('assistantCheck').onclick=()=>assistantAnswer();$('assistantAsk').onclick=()=>assistantAnswer($('assistantInput').value);","$('assistantCheck').onclick=()=>labAsk('');$('assistantAsk').onclick=()=>labAsk($('assistantInput').value);$('labOnline').onclick=()=>{const q=$('assistantInput').value.trim(),key=$('labApiKey').value.trim(),model=$('labModel').value.trim();if(labBusy)return;if(!q||!key||!model){notify(msg('Enter question, key and model','اكتب السؤال والمفتاح والنموذج'));return}if(!window.WC01Online){notify(msg('Online bridge unavailable','الاتصال الخارجي غير متاح'));return}labBusy=true;$('labOnline').disabled=true;labMessage(q,'user');$('assistantInput').value='';$('labOnlineStatus').textContent=msg('Requesting online answer…','جاري طلب إجابة أونلاين…');try{window.WC01Online.ask(key,model,q)}catch(e){window.__wc01OnlineAnswer(false,'Online bridge failed')}};window.__wc01OnlineAnswer=(ok,answer)=>{labBusy=false;$('labOnline').disabled=false;$('labOnlineStatus').textContent=ok?msg('Online model','نموذج أونلاين'):msg('Online unavailable; local assistant still works','أونلاين غير متاح؛ المساعد المحلي يعمل');labMessage(String(answer),'bot')};document.querySelectorAll('[data-question]').forEach(el=>el.onclick=()=>labAsk(el.dataset.question));if($('labSave')){$('labSave').onclick=labRegistrySave;$('labCapture').onclick=()=>{if(online()&&typeof liveStatus.serial==='string')$('labSerial').value=liveStatus.serial;else notify(msg('No authenticated controller','لا يوجد كنترول متصل ومؤكد'))}};");
  x.js=sub(x.js,"$('assistantIntro').textContent=msg('Built-in diagnostic rules, no internet or external AI model.','قواعد تشخيص مدمجة، بدون إنترنت أو نموذج ذكاء اصطناعي خارجي.');","$('assistantIntro').textContent=msg('Local diagnostic rules · optional online model','قواعد تشخيص محلية · نموذج أونلاين اختياري');");
- x.js=sub(x.js,"v6.1.6 · Contextual remote, weld progress, local assistant","V1.1.5 · "+edition+" · Local + optional online");
+ x.js=sub(x.js,"v6.1.6 · Contextual remote, weld progress, local assistant","V1.1.6 · "+edition+" · Local + optional online");
  return x;
 }
 const root=process.argv[2],edition=process.argv[3];if(!['customer','engineering'].includes(edition))throw Error('edition');const map={js:'app/src/main/assets/js/app.js',html:'app/src/main/assets/index.html',css:'app/src/main/assets/css/style.css',gradle:'app/build.gradle.kts',manifest:'app/src/main/AndroidManifest.xml'};const source=Object.fromEntries(Object.entries(map).map(([k,v])=>[k,fs.readFileSync(path.join(root,v),'utf8')]));const result=makeEdition(source,edition);new Function(result.js);for(const [k,v] of Object.entries(map))fs.writeFileSync(path.join(root,v),result[k]);fs.copyFileSync(new URL('./lab-core.js',import.meta.url),path.join(root,'app/src/main/assets/js/lab-core.js'));
@@ -73,9 +73,9 @@ finalApp=finalApp.replace(appEnd,"if(get('introSeen',false))enterApp();else intr
 new Function(finalApp);
 fs.writeFileSync(path.join(root,map.js),finalApp);
 
-/* V1.1.5: keep displayed capabilities and settings aligned with actual firmware. */
+/* V1.1.6: keep displayed capabilities and settings aligned with actual firmware. */
 let revised=fs.readFileSync(path.join(root,map.js),'utf8');
-const change=(a,b)=>{if(!revised.includes(a))throw Error('V1.1.5 anchor missing: '+a.slice(0,80));revised=revised.replace(a,b)};
+const change=(a,b)=>{if(!revised.includes(a))throw Error('V1.1.6 anchor missing: '+a.slice(0,80));revised=revised.replace(a,b)};
 change("Connect and update controller V7.3.12, wake the screen and stop the machine first. No command queued.","This controller does not advertise the setting API, or is disconnected. Use Settings or install a compatible controller version. No command queued.");
 change("اتصل بكنترول V7.3.12 وأيقظ الشاشة وأوقف الماكينة أولًا. مفيش أوامر محفوظة للتنفيذ لاحقًا.","الكنترول غير متصل أو لا يدعم أمر التعديل. استخدم الإعدادات أو إصدار كنترول متوافق. لا توجد أوامر مؤجلة.");
 change("const special=window.WC01Lab.diagnose(q,labLast);","const isSetting=/(?:عدل|اضبط|غير|غيّر|set |change |adjust )/i.test(q);const special=isSetting?null:window.WC01Lab.diagnose(q,labLast);");
@@ -97,7 +97,7 @@ let htmlFinal=fs.readFileSync(path.join(root,map.html),'utf8');
 htmlFinal=htmlFinal.replace('0 Hz disables the pulse output. Continuous welding output is not implemented yet.','0 Hz = continuous welding, NOT output OFF.');
 fs.writeFileSync(path.join(root,map.html),htmlFinal);
 
-/* V1.1.5: phone panel fault diagnostics, no remote fault motion. */
+/* V1.1.6: phone panel fault diagnostics, no remote fault motion. */
 let panelApp=fs.readFileSync(path.join(root,map.js),'utf8');
 const panelPatch=(a,b)=>{if(panelApp.split(a).length!==2)throw Error('Panel anchor missing/ambiguous: '+a.slice(0,90));panelApp=panelApp.replace(a,b)};
 panelPatch("function panelAllowed(k){\n if(!online())return false;","function panelAllowed(k){\n if(!online())return false;\n if(liveStatus.state==='fault'||Number(liveStatus.page)===14){if(k==='esc')return true;return k==='enter'&&panelReady()&&liveStatus.phone_home_check_available===true&&panelHas('enter')}\n if(liveStatus.state==='sensor_check')return k==='esc';");
@@ -105,7 +105,7 @@ panelPatch(" if(k==='start'&&['running','homing'].includes(liveStatus.state)){ac
 panelPatch("المعايرة والأعطال المحمية من الطبلون فقط.');\n}","المعايرة والأعطال المحمية من الطبلون فقط.');\n if(online()&&(liveStatus.state==='fault'||Number(liveStatus.page)===14)){\n  $('panel-sub-esc').textContent=msg('STOP','إيقاف');$('panel-sub-enter').textContent=msg('Sensor check','فحص الحساس');\n  $('panelHint').textContent='F'+(Number(liveStatus.fault_code)||'—')+' · '+(liveStatus.phone_home_check_available===true?msg('ENTER opens a stationary HOME sensor check. ESC sends STOP.','ENTER يفتح فحص حساس HOME دون حركة. ESC يرسل STOP.'):msg('Fault recovery requires the local panel, or compatible firmware. ESC sends STOP.','الاستعادة تتطلب الطبلون المحلي أو كود كنترول متوافق. ESC يرسل STOP.'));\n }\n if(online()&&liveStatus.state==='sensor_check'){\n  $('panelPageName').textContent=msg('HOME sensor test','فحص حساس HOME');$('panel-sub-esc').textContent=msg('STOP','إيقاف');\n  const step=liveStatus.home_sensor_check;\n  $('panelHint').textContent=step==='activate'?msg('Drive and weld power isolated: activate HOME sensor physically.','بعد فصل قدرة الموتور واللحام: فعّل حساس HOME فعليًا.'):step==='release'?msg('Release HOME sensor physically.','حرّر حساس HOME فعليًا.'):msg('Sensor checked. Local ENTER required to seek HOME. Verify safe path first.','تم فحص الحساس. يلزم ENTER على الكنترول للبحث عن HOME بعد التأكد من سلامة المسار.');\n }\n}");
 new Function(panelApp);fs.writeFileSync(path.join(root,map.js),panelApp);
 
-/* V1.1.5: mm/s presentation, existing API, NVS and presets in mm/min. */
+/* V1.1.6: mm/s presentation, existing API, NVS and presets in mm/min. */
 let unitApp=fs.readFileSync(path.join(root,map.js),'utf8');
 const unitPatch=(a,b)=>{if(unitApp.split(a).length!==2)throw Error('Unit anchor missing/ambiguous: '+a.slice(0,100));unitApp=unitApp.replace(a,b)};
 unitPatch("$('metricSpeed').textContent=v('speed',0);","$('metricSpeed').textContent=online()&&Number.isFinite(Number(liveStatus.speed))&&liveStatus.speed!==null?(Number(liveStatus.speed)/60).toFixed(2):'—';");
@@ -127,7 +127,7 @@ for(const id of ['fSpeed','fJog','fFast','fInitial','liveSpeedInput']){
 }
 fs.writeFileSync(path.join(root,map.html),unitHtml);
 
-/* V1.1.5: speed ceiling is controller-authoritative, factory-only. */
+/* V1.1.6: speed ceiling is controller-authoritative, factory-only. */
 let limitApp=fs.readFileSync(path.join(root,map.js),'utf8');
 const limitPatch=(a,b)=>{if(limitApp.split(a).length!==2)throw Error('Speed ceiling anchor: '+a);limitApp=limitApp.replace(a,b)};
 limitPatch('function adjustLiveSpeed(delta){', "function machineSpeedLimit(){const n=Number(liveStatus?.speed_limit_mm_s);return online()&&Number.isFinite(n)&&n>=1?Math.min(66,n):20}\nfunction adjustLiveSpeed(delta){");
@@ -144,3 +144,17 @@ for(const id of ['fSpeed','fJog','fFast','liveSpeedInput']){
  limitHtml=limitHtml.replace(re,tag=>tag.replace(/\bmax="[^"]*"/,'max="66"'));
 }
 fs.writeFileSync(path.join(root,map.html),limitHtml);
+
+/* V1.1.6: authoritative operating minimum and maximum in mm/s. */
+let floorApp=fs.readFileSync(path.join(root,map.js),'utf8');
+const floorPatch=(a,b)=>{if(floorApp.split(a).length!==2)throw Error('Minimum speed anchor: '+a.slice(0,120));floorApp=floorApp.replace(a,b)};
+floorPatch("function machineSpeedLimit(){const n=Number(liveStatus?.speed_limit_mm_s);return online()&&Number.isFinite(n)&&n>=1?Math.min(66,n):20}", "function machineSpeedLimit(){const n=numericField(liveStatus?.speed_limit_mm_s);return online()&&n!==null&&n>=1?Math.min(66,Math.floor((n+0.000001)*100)/100):20}\nfunction machineSpeedMinimum(){const n=numericField(liveStatus?.speed_min_mm_s);return online()&&n!==null&&n>=0.01&&n<=machineSpeedLimit()?n:0.01}");
+floorPatch("Math.max(.01,current+delta)","Math.max(machineSpeedMinimum(),current+delta)");
+floorPatch("speed===null||speed<.01||speed>machineSpeedLimit()","speed===null||speed<machineSpeedMinimum()||speed>machineSpeedLimit()");
+floorPatch("msg('Maximum configured speed: ','أقصى سرعة مضبوطة: ')+machineSpeedLimit()+' mm/s'","msg('Allowed speed: ','السرعة المسموحة: ')+machineSpeedMinimum()+' – '+machineSpeedLimit()+' mm/s'");
+floorPatch("speed:[.01,machineSpeedLimit()],distance:[.1,1000],pulse:[0,5],jog:[.01,machineSpeedLimit()],fast:[.01,machineSpeedLimit()]","speed:[machineSpeedMinimum(),machineSpeedLimit()],distance:[.1,1000],pulse:[0,5],jog:[machineSpeedMinimum(),machineSpeedLimit()],fast:[machineSpeedMinimum(),machineSpeedLimit()]");
+floorPatch("speed:[.6,machineSpeedLimit()*60],jog:[.1,machineSpeedLimit()*60],fast:[.1,machineSpeedLimit()*60]","speed:[machineSpeedMinimum()*60,machineSpeedLimit()*60],jog:[machineSpeedMinimum()*60,machineSpeedLimit()*60],fast:[machineSpeedMinimum()*60,machineSpeedLimit()*60]");
+floorPatch("for(const id of ['fSpeed','fJog','fFast','liveSpeedInput'])$(id).max=String(machineSpeedLimit());","for(const id of ['fSpeed','fJog','fFast','liveSpeedInput']){$(id).min=String(machineSpeedMinimum());$(id).max=String(machineSpeedLimit())}");
+floorPatch("const speedAllowed=online()&&!commandBusy&&!stopPending&&canLiveSpeed(liveStatus);","$('liveSpeedInput').min=String(machineSpeedMinimum());$('liveSpeedInput').max=String(machineSpeedLimit());const speedAllowed=online()&&!commandBusy&&!stopPending&&canLiveSpeed(liveStatus);");
+floorPatch("else if(/mm\\s*\\/\\s*min|مم\\s*\\/\\s*د|مم\\s*في\\s*الدقيق/.test(t))display+=' mm/min';","else if(/mm\\s*\\/\\s*min|مم\\s*\\/\\s*د|مم\\s*في\\s*الدقيق/.test(t))display=(value/60).toFixed(2)+' mm/s';");
+new Function(floorApp);fs.writeFileSync(path.join(root,map.js),floorApp);
