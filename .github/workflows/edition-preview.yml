@@ -1,0 +1,117 @@
+name: WC01 edition preview
+on:
+  push:
+    branches: [test/engineering-customer-preview]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        edition: [customer, engineering]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Prepare edition and validate assets
+        env:
+          EDITION: ${{ matrix.edition }}
+        run: |
+          unzip -q uArt_WC01_Android_Source.zip -d work
+          python3 - <<'PY'
+          from pathlib import Path
+          import os,re
+          edition=os.environ['EDITION']
+          eng=edition=='engineering'
+          name='uArt Engineering Preview' if eng else 'uArt Customer Preview'
+          app=Path('work/android/app')
+          p=app/'build.gradle.kts'
+          s=p.read_text()
+          s,n=re.subn(r'applicationId\s*=\s*"[^"]+"', 'applicationId = "com.uart.wc01.'+edition+'preview"',s,count=1)
+          assert n==1
+          s,n=re.subn(r'versionName\s*=\s*"[^"]+"','versionName = "6.2.0-'+edition+'-preview"',s,count=1)
+          assert n==1
+          p.write_text(s)
+          p=app/'src/main/AndroidManifest.xml'
+          s,n=re.subn(r'android:label="[^"]+"','android:label="'+name+'"',p.read_text(),count=1)
+          assert n==1
+          p.write_text(s)
+          assets=app/'src/main/assets'
+          p=assets/'index.html'
+          s=p.read_text()
+          marker='<section id="page-machine"'
+          assert s.count(marker)==1
+          pos=s.index('>',s.index(marker))+1
+          panel='''<section class="wc-edition" aria-label="Edition preview"><div class="wc-edition-top"><span>uArt / INDUSTRIAL SYSTEMS</span><strong>'''+name+'''</strong><small>6.2 · TEST BUILD / إصدار تجريبي</small></div><p>'''+('Engineering workspace · local inventory and diagnostics' if eng else 'Operator workspace · controller diagnostics')+'''</p><div class="wc-chat"><label for="wc-question">مساعد الصيانة / Maintenance assistant</label><div class="wc-chips"><button type="button" data-wcq="restart">ESP32 Reset</button><button type="button" data-wcq="home">HOME</button><button type="button" data-wcq="wifi">Wi-Fi</button><button type="button" data-wcq="stop">Safety</button></div><input id="wc-question" maxlength="180" placeholder="اكتب المشكلة / Ask about a fault"><button type="button" id="wc-ask">اسأل / Ask</button><p id="wc-answer" role="status">مساعد محلي بقواعد تشخيص محددة. لا يتحكم في الحركة ولا يتصل بخدمة AI.</p></div>'''
+          if eng:
+              panel+='''<div class="wc-inventory"><h3>Machine register / سجل الماكينات</h3><p>Local inventory only — not network discovery or remote control.</p><label for="wc-machine-name">Machine name</label><input id="wc-machine-name" maxlength="60"><label for="wc-machine-ip">Local IPv4</label><input id="wc-machine-ip" maxlength="15" placeholder="192.168.1.20"><button type="button" id="wc-machine-add">Save machine</button><p id="wc-machine-feedback" role="status"></p><div id="wc-machine-list"></div></div>'''
+          panel+='</section>'
+          s=s[:pos]+panel+s[pos:]
+          assert '</head>' in s and '</body>' in s
+          s=s.replace('</head>','<link rel="stylesheet" href="css/edition-preview.css"></head>',1)
+          s=s.replace('</body>','<script src="js/edition-preview.js"></script></body>',1)
+          p.write_text(s)
+          (assets/'css/edition-preview.css').write_text('''.wc-edition{background:#111e30;color:#edf4ff;border:1px solid #45566e;border-radius:20px;padding:18px;margin:0 0 18px;box-shadow:0 8px 24px #0003}.wc-edition-top{display:grid;gap:7px;border-bottom:1px solid #3f5067;padding-bottom:12px}.wc-edition-top span,.wc-edition-top small{font-size:11px;letter-spacing:1px;color:#a9b9cc}.wc-edition-top strong{font-size:23px;color:#f0c77e}.wc-edition p{line-height:1.6;font-size:13px}.wc-edition label{display:block;margin:12px 0 6px;font-size:13px}.wc-edition input{display:block;box-sizing:border-box;width:100%;background:#0b1421;color:white;border:1px solid #526781;border-radius:10px;padding:12px;margin:8px 0}.wc-edition button{border:1px solid #61768e;background:#21344a;color:#f5f8ff;border-radius:10px;padding:10px 12px;margin:4px 4px 4px 0;font:inherit;font-size:12px}.wc-edition #wc-ask,.wc-edition #wc-machine-add{background:#eac47d;color:#17202c;width:100%;font-weight:bold}.wc-chips{display:flex;flex-wrap:wrap}.wc-edition #wc-answer{white-space:pre-wrap;background:#0b1421;border-radius:12px;padding:12px;min-height:70px}.wc-inventory{border-top:1px solid #45566e;margin-top:14px;padding-top:12px}.wc-device{display:flex;align-items:center;justify-content:space-between;gap:8px;border-bottom:1px solid #45566e;padding:8px 0;overflow-wrap:anywhere}''')
+          (assets/'js/edition-preview.js').write_text('''(()=>{'use strict';
+          const $=id=>document.getElementById(id);
+          const rules=[
+          [/reset|restart|brownout|ريست|يفصل|فصل|جهد|كهرب/i,'افصل قدرة الموتور واللحام. اختبر ESP32 وحده على تغذية 5V مستقرة، وقِس الجهد عند البوردة لحظة عمل الريلاي. افحص دايود الحماية والأسلاك. لا ترفع الجهد عشوائياً.'],
+          [/home|bx|هوم|حساس/i,'افصل قدرة الحركة واللحام قبل فحص الأسلاك. راقب حالة HOME من شاشة الكنترول واختبر الحساس يدوياً. لا تتجاوز حساس النهاية أو تجبر الحركة.'],
+          [/wifi|wi.fi|واي|شبك|اتصال/i,'تحقق من شبكة الكنترول ومفتاح الربط. إذا انقطع الاتصال فلا تعتبر حالة الماكينة مؤكدة. استعمل لوحة التشغيل الفعلية عند الحاجة؛ لا تعِد إرسال START تلقائياً.'],
+          [/stop|safety|emergency|طوارئ|خطر|إيقاف/i,'في حالة الخطر استخدم دائرة إيقاف الطوارئ الفعلية واعزل القدرة. لا تعتمد على أمر STOP عبر Wi-Fi وحده.']
+          ];
+          function answer(q){return (rules.find(([pattern])=>pattern.test(q))||[])[1]||'المساعد المحلي لا يملك تشخيصاً مؤكداً لهذه المشكلة. اكتب رمز العطل وحالة الشاشة، وراجع دليل الكنترول. لا تستأنف التشغيل قبل التأكد من سبب العطل.'}
+          function privateIP(ip){const a=ip.split('.');if(a.length!==4||a.some(x=>!/^\\d{1,3}$/.test(x)||+x>255))return false;const n=a.map(Number);return n[0]===10||n[0]===192&&n[1]===168||n[0]===172&&n[1]>=16&&n[1]<=31}
+          if(typeof module!=='undefined'&&module.exports){module.exports={answer,privateIP};return}
+          if(!$('wc-ask'))return;
+          const ask=()=>{$('wc-answer').textContent=answer($('wc-question').value)};
+          $('wc-ask').onclick=ask;
+          $('wc-question').addEventListener('keydown',e=>{if(e.key==='Enter')ask()});
+          document.querySelectorAll('[data-wcq]').forEach(el=>el.onclick=()=>{$('wc-question').value=el.dataset.wcq;ask()});
+          if(!$('wc-machine-add'))return;
+          let devices=[];try{const d=JSON.parse(localStorage.getItem('wc-preview-inventory')||'[]');if(Array.isArray(d))devices=d.filter(v=>v&&typeof v.name==='string'&&typeof v.ip==='string'&&privateIP(v.ip)).slice(0,100)}catch{}
+          const save=()=>{try{localStorage.setItem('wc-preview-inventory',JSON.stringify(devices));return true}catch{return false}};
+          function render(){const root=$('wc-machine-list');root.replaceChildren();devices.forEach((v,i)=>{const row=document.createElement('div'),text=document.createElement('span'),del=document.createElement('button');row.className='wc-device';text.textContent=v.name+' — '+v.ip;del.type='button';del.textContent='Remove';del.onclick=()=>{devices.splice(i,1);save();render()};row.append(text,del);root.append(row)})}
+          $('wc-machine-add').onclick=()=>{const name=$('wc-machine-name').value.trim(),ip=$('wc-machine-ip').value.trim(),out=$('wc-machine-feedback');if(!name||!privateIP(ip)||devices.length>=100||devices.some(v=>v.ip===ip)){out.textContent='Enter a unique private IPv4 and machine name (max 100).';return}devices.push({name,ip});out.textContent=save()?'Saved locally. No connection attempted.':'Storage unavailable.';render()};
+          render();
+          })();''')
+          PY
+          node --check work/android/app/src/main/assets/js/app.js
+          node --check work/android/app/src/main/assets/js/edition-preview.js
+          node <<'JS'
+          const assert=require('node:assert/strict');
+          const m=require('./work/android/app/src/main/assets/js/edition-preview.js');
+          assert(m.answer('restart').includes('5V'));
+          assert(m.answer('HOME').includes('HOME'));
+          assert(m.answer('unknown').includes('لا يملك'));
+          assert(m.privateIP('192.168.1.20'));
+          assert(m.privateIP('172.16.1.20'));
+          assert(!m.privateIP('8.8.8.8'));
+          assert(!m.privateIP('192.168.256.1'));
+          assert(!m.privateIP('192.168.1.x'));
+          JS
+      - name: Install Android SDK
+        run: |
+          SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -path '*/bin/sdkmanager' -type f | sort -V | tail -n 1)"
+          test -n "$SDKMANAGER"
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" --install "platforms;android-35" "build-tools;35.0.0"
+      - name: Build preview APK
+        working-directory: work/android
+        run: gradle --no-daemon --stacktrace :app:assembleDebug
+      - name: Upload test APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: uArt-${{ matrix.edition }}-6.2-preview-APK
+          path: work/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
