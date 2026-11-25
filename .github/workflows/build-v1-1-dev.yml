@@ -1,0 +1,36 @@
+name: Build V1.1 development editions
+on:
+  push:
+    branches: [v1.1-development]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  lab:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        edition: [customer, engineering]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - run: node lab/test.mjs
+      - run: unzip -q uArt_WC01_Android_Source.zip -d android-source
+      - run: node lab/prepare.mjs android-source/android ${{ matrix.edition }}
+      - run: node --check android-source/android/app/src/main/assets/js/app.js
+      - run: gradle --no-daemon :app:assembleDebug
+        working-directory: android-source/android
+      - uses: actions/upload-artifact@v4
+        with:
+          name: uArt-V1.1-DEV-${{ matrix.edition }}
+          path: android-source/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error

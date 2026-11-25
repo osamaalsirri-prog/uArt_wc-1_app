@@ -1,0 +1,20 @@
+
+#wfLaunch.wf-launch{width:100%;min-height:46px;background:#1c3a39;border:1px solid #5ce6cf;color:#5ce6cf;margin:12px 0;font:700 13px system-ui;border-radius:9px}
+#wfPanel[hidden]{display:none!important}
+#wfPanel{position:fixed;inset:0;z-index:2147483646;overflow:auto;overscroll-behavior:contain;background:#10191e;color:#e9f2ee;padding:16px 14px 32px;box-sizing:border-box;font:14px/1.5 system-ui,sans-serif;color-scheme:dark}
+#wfPanel *{box-sizing:border-box}
+#wfPanel header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #405457;padding-bottom:12px;gap:8px}
+#wfPanel header small{color:#5ce6cf;font-size:11px;letter-spacing:1px}
+#wfPanel h1{margin:4px 0;font-size:23px;line-height:1.25}
+#wfPanel h2{font-size:16px;color:#e2f2eb;margin:0 0 10px}
+#wfPanel section{background:#18272d;border:1px solid #34484d;border-radius:10px;padding:12px;margin:12px 0}
+#wfPanel p{font-size:12px;color:#bccdca;white-space:pre-wrap;overflow-wrap:anywhere;margin:8px 0}
+#wfPanel p.wf-warn{padding:12px;background:#3b2d20;border:1px solid #936a3d;color:#f3d4a6;border-radius:8px}
+#wfPanel .wf-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#wfPanel label{display:block;font-size:11px;color:#c2d3ce;margin-top:6px}
+#wfPanel input,#wfPanel select,#wfPanel textarea{display:block;width:100%;min-height:42px;margin:4px 0 8px;background:#0f1a20;color:#f0f5f2;border:1px solid #48615f;border-radius:7px;font:14px system-ui;padding:8px}
+#wfPanel button{border:1px solid #4c7770;background:#284841;color:#edf9f4;border-radius:8px;padding:8px 12px;min-height:42px;font:600 12px system-ui}
+#wfPanel button:disabled{opacity:.4}
+#wfPanel .wf-actions{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+#wfPanel .wf-actions button{flex:1}
+#wfPanel #wfMessage{color:#a9e5d9}

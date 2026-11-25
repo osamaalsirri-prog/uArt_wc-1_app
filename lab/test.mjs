@@ -15,3 +15,7 @@ assert.equal(calc(100,120,10,200,8,3).stepHz,320);
 assert.equal(calc(100,0,10,200,8,3),null);
 assert.equal(calc(100,120,10,200,8,0).pitch,null);
 console.log('Engineering calculation tests passed');
+
+await import('./factory-ui.js');
+const p=globalThis.WC01FactoryV11.getDefault();const check=globalThis.WC01FactoryV11.validate;
+assert.equal(check(p),true);assert.equal(check({...p,home:12,end:34}),true);assert.equal(check({...p,home:12,end:12}),false);assert.equal(check({...p,home:23}),false);assert.equal(check({...p,ppr:0}),false);assert.equal(check({...p,initial:601}),false);console.log('V1.1 factory profile validation tests passed');
