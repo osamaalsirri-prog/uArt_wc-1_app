@@ -7,3 +7,11 @@ console.log('7 diagnostic checks passed');
 
 assert.ok(d('HOME')[0].includes('GPIO34'));
 assert.ok(d('نهاية المشوار')[0].includes('GPIO12'));
+
+await import('./engineering.js');
+const calc=globalThis.WC01EngineeringMath.calculate;
+assert.equal(calc(100,120,10,200,8,3).seconds,50);
+assert.equal(calc(100,120,10,200,8,3).stepHz,320);
+assert.equal(calc(100,0,10,200,8,3),null);
+assert.equal(calc(100,120,10,200,8,0).pitch,null);
+console.log('Engineering calculation tests passed');
