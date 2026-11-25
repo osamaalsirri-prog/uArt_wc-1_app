@@ -3,8 +3,8 @@ import path from 'node:path';
 function makeEdition(source,edition){
  const x={...source},eng=edition==='engineering';
  const sub=(s,a,b)=>{if(!s.includes(a))throw Error('Missing anchor: '+a.slice(0,90));return s.replace(a,b)};
- x.gradle=sub(x.gradle,'versionCode = 17','versionCode = 22');
- x.gradle=sub(x.gradle,'versionName = "6.1.6"','versionName = "1.1-dev"');
+ x.gradle=sub(x.gradle,'versionCode = 17','versionCode = 23');
+ x.gradle=sub(x.gradle,'versionName = "6.1.6"','versionName = "1.1-run-preview"');
  if(eng)x.gradle=sub(x.gradle,'applicationId = "com.uart.wc01"','applicationId = "com.uart.wc01.engineering"');
  x.manifest=sub(x.manifest,'android:label="uArt WC-01"','android:label="'+(eng?'uArt WC-01+':'uArt WC-01')+'"');
  x.html=sub(x.html,'<div class="assistant-reply" id="assistantReply"','<details class="lab-engineering"><summary>Online AI / ذكاء أونلاين (اختياري)</summary><p>Uses your own OpenAI API key; requests may incur charges. Only the question you enter is sent. / قد تُحسب تكلفة حسب حسابك، يُرسل السؤال فقط.</p><label>API key (session only)<input id="labApiKey" type="password" autocomplete="off" maxlength="256"></label><label>Model<input id="labModel" value="gpt-4.1-mini" maxlength="64"></label><button type="button" id="labOnline">Ask online / اسأل أونلاين</button><div id="labOnlineStatus" role="status"></div></details><div class="lab-chat" id="labChat" role="log" aria-live="polite"></div><div class="lab-prompts"><button type="button" data-question="F8">F8</button><button type="button" data-question="ESP32 restart">Power</button><button type="button" data-question="HOME">HOME</button><button type="button" data-question="Wi-Fi">Wi-Fi</button></div><div class="assistant-reply" id="assistantReply"');
