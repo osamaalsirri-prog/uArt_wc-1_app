@@ -25,7 +25,7 @@ jobs:
             unzip -q uArt_WC01_Android_Source.zip -d "prepared-$edition"
             node lab/prepare.mjs "prepared-$edition/android" "$edition"
             node --check "prepared-$edition/android/app/src/main/assets/js/app.js"
-            (cd "prepared-$edition" && zip -qr "../export/Android_$edition_V1.1.9_source.zip" android)
+            (cd "prepared-$edition" && zip -qr "../export/Android_${edition}_V1.1.9_source.zip" android)
           done
           node lab/test.mjs > export/Android_source_tests.txt
           (cd export && sha256sum * > SHA256SUMS.txt)
@@ -38,7 +38,7 @@ jobs:
         continue-on-error: true
         run: |
           mkdir -p libraries
-          git clone --depth 1 --branch v2.5.43 https://github.com/Bodmer/TFT_eSPI.git libraries/TFT_eSPI
+          git clone --depth 1 https://github.com/Bodmer/TFT_eSPI.git libraries/TFT_eSPI
           git -C libraries/TFT_eSPI rev-parse HEAD > libraries/TFT_eSPI_commit.txt
           rm -rf libraries/TFT_eSPI/.git
           echo 'Reference version only; actual installed version must be verified on the owner PC.' > libraries/README.txt
